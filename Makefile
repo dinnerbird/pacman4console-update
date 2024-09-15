@@ -3,8 +3,9 @@ bindir=$(prefix)/bin
 datarootdir=$(prefix)/share
 
 all:
-	gcc pacman.c     -o pacman     -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -lncursesw
-	gcc pacmanedit.c -o pacmanedit -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -lncursesw
+	gcc pacman.c     -o pacman     -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -lncursesw -ltinfo -finput-charset=UTF-8 -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
+	gcc pacmanedit.c -o pacmanedit -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -lncursesw -ltinfo -finput-charset=UTF-8 -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
+
 
 install:	all
 	mkdir -p $(DESTDIR)$(bindir)

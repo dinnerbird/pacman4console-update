@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 #include <stdio.h>
-#include <ncurses.h>
+#include <ncursesw/ncurses.h>
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
@@ -101,6 +101,7 @@ int milsleep(long milliseconds) {
 
 int main(int argc, char *argv[])
 {
+	setlocale(LC_ALL, ""); //I was told to do this
 
 	// Call nanosleep with the predefined timespec
 
@@ -276,7 +277,7 @@ void DrawWindow()
 				// I'm *really* afraid to touch this
 
 			case 0:
-				chr = L' ';
+				chr = L'\u2591';
 				attr = A_NORMAL;
 				wattron(win, COLOR_PAIR(Normal));
 				break;
@@ -424,7 +425,6 @@ void GetInput()
 
 void InitCurses()
 {
-	//	setlocale(LC_ALL, ""); //I was told to do this
 
 	initscr();
 	start_color();
