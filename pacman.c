@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <ncurses.h>
 #include <time.h>
-
+#include <unistd.h>
 #include <string.h>
 #include <wchar.h>
 #include "pacman.h"
@@ -88,6 +88,16 @@ int tleft = 0;					// How long left for invincibility
 // defining sleep timer
 // compiler gets really mad over using old functions, here's your answer
 const struct timespec honkShoo = {0, 1000000L}; // 1 millisecond
+
+int milsleep(long milliseconds) {
+	struct timespec rem;
+	struct timespec req = {
+		(int)(milliseconds / 1000), /* seconds, MUST be non-negative */
+		(milliseconds % 1000) * 1000000 /* nano, very picky */
+
+	};
+	return nanosleep(&req,&rem);
+}
 
 int main(int argc, char *argv[])
 {
@@ -152,7 +162,7 @@ void CheckCollision()
 				GhostsInARow *= 2;
 				wrefresh(win);
 
-				nanosleep(&honkShoo, NULL);
+				milsleep(500); // Five. Hundred. Milliseconds.
 
 				Loc[a][0] = StartingPoints[a][0];
 				Loc[a][1] = StartingPoints[a][1];
@@ -162,13 +172,13 @@ void CheckCollision()
 			else
 			{
 				wattron(win, COLOR_PAIR(Pacman));
-				mvwprintw(win, Loc[4][0], Loc[4][1], "X");
+				
+				mvwprintw(win, Loc[4][0], Loc[4][1], "X"); // he's fucking dead
 
 				wrefresh(win);
-
+				milsleep(2500);
 				Lives--;
-				nanosleep(&honkShoo, NULL);
-
+				
 				if (Lives == -1)
 					ExitProgram(END_MSG);
 
