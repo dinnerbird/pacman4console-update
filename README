@@ -24,6 +24,8 @@ i.e.:
 The ASCII art
 -------------
 
+# These graphics are terrible. They are going to be improved...
+
 + `C`	-	Pacman - That's you.
 + `&`	-	Ghosts - Boo.
 + `.`	-	Pellet - Yummy. Collect all of them to pass to the next level.
@@ -63,6 +65,5 @@ To make your own levels, see `Levels/README`.
 
 Contact Information
 -------------------
-Send comments and levels you have made to `doctormike@gmail.com`.
+Send comments, levels, grievances, or complaints you have made to `alex@opossum-systems.net`.
 
-There is a [homepage](https://sites.google.com/site/doctormike/pacman.html).
