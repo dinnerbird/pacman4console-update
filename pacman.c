@@ -19,12 +19,12 @@
 
 // TO PREVENT FURTHER OBVIOUS FRUSTRATION:
 // Use the makefile.
-#define _POSIX_C_SOURCE 199309L // kinda gross but yeah
+// kinda gross but yeah
+#define _XOPEN_SOURCE_EXTENDED
 #include <stdlib.h>
 
 #include <stdio.h>
 #include <ncursesw/ncurses.h>
-#include <time.h>
 #include <unistd.h>
 #include <string.h>
 #include <wchar.h>
@@ -33,6 +33,7 @@
 
 #include <unistd.h>
 #include <sys/resource.h>
+#include <time.h>
 
 #define EXIT_MSG "Good bye!"
 #define END_MSG "Game Over"
@@ -89,19 +90,21 @@ int tleft = 0;					// How long left for invincibility
 // compiler gets really mad over using old functions, here's your answer
 const struct timespec honkShoo = {0, 1000000L}; // 1 millisecond
 
-int milsleep(long milliseconds) {
+int milsleep(long milliseconds)
+{
 	struct timespec rem;
 	struct timespec req = {
-		(int)(milliseconds / 1000), /* seconds, MUST be non-negative */
+		(int)(milliseconds / 1000),		/* seconds, MUST be non-negative */
 		(milliseconds % 1000) * 1000000 /* nano, very picky */
 
 	};
-	return nanosleep(&req,&rem);
+	return nanosleep(&req, &rem);
 }
 
 int main(int argc, char *argv[])
 {
-	setlocale(LC_ALL, ""); //I was told to do this
+	setlocale(LC_ALL, "");
+	; // I was told to do this
 
 	// Call nanosleep with the predefined timespec
 
@@ -173,16 +176,22 @@ void CheckCollision()
 			else
 			{
 				wattron(win, COLOR_PAIR(Pacman));
-				
+
 				mvwprintw(win, Loc[4][0], Loc[4][1], "X"); // he's fucking dead
 
 				wrefresh(win);
 				milsleep(2500);
 				Lives--;
-				
-				if (Lives == -1)
-					ExitProgram(END_MSG);
 
+				if (Lives == -1)
+					wattron(win, COLOR_PAIR(Ghost1));
+					mvwprintw(win, 12, 10, "╔═════════╗");
+					mvwprintw(win, 13, 10, "║GAME OVER║");
+					mvwprintw(win, 14, 10, "╚═════════╝");
+					wrefresh(win);
+					
+				milsleep(1000);
+				ExitProgram(END_MSG);
 				// Reset level
 				for (a = 0; a < 5; a++)
 				{
@@ -253,8 +262,10 @@ void DrawWindow()
 {
 	int draw_Y = 0;
 	int draw_X = 0;
-	wchar_t chr = ' '; // changing to wchar_t allows for f r e a k y unicode support
+	wchar_t chr; // changing to wchar_t allows for f r e a k y unicode support
 	int attr;
+
+	// mvwprintw?? may be the right option?
 
 	// Display level array
 	for (draw_Y = 0; draw_Y < 29; draw_Y++)
@@ -277,17 +288,17 @@ void DrawWindow()
 				// I'm *really* afraid to touch this
 
 			case 0:
-				chr = L'\u2591';
+				chr = ' ';
 				attr = A_NORMAL;
 				wattron(win, COLOR_PAIR(Normal));
 				break;
 			case 1:
-				chr = L' ';
+				chr = ' ';
 				attr = A_NORMAL;
 				wattron(win, COLOR_PAIR(Wall));
 				break;
 			case 2:
-				chr = L'o';
+				chr = L'\u00b7';
 				attr = A_NORMAL;
 				wattron(win, COLOR_PAIR(Pellet));
 				break;
@@ -304,9 +315,11 @@ void DrawWindow()
 			}
 			// add a single-byte character and rendition to a window and advance the cursor
 			// and do that a whole buncha times
-			mvwaddch(win, draw_Y, draw_X, chr | attr); // kinda important, not advisable to remove
-		}
+			//mvwaddch(win, draw_Y, draw_X, chr); // kinda important, not advisable to remove
+			mvwprintw(win, draw_Y, draw_X, "%lc", chr);
 
+		}
+	// -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 	int stillAlive;
 	// Display number of lives, score, and level
 	attr = A_NORMAL;
@@ -425,7 +438,9 @@ void GetInput()
 
 void InitCurses()
 {
+	// The setlocale() must precede initscr
 
+	milsleep(500);
 	initscr();
 	start_color();
 	curs_set(0);
@@ -436,7 +451,7 @@ void InitCurses()
 	noecho();
 
 	init_pair(Normal, COLOR_WHITE, COLOR_BLACK);
-	init_pair(Wall, COLOR_WHITE, COLOR_WHITE);
+	init_pair(Wall, COLOR_WHITE, COLOR_BLUE);
 	init_pair(Pellet, COLOR_WHITE, COLOR_BLACK);
 	init_pair(PowerUp, COLOR_BLUE, COLOR_BLACK);
 	init_pair(GhostWall, COLOR_WHITE, COLOR_CYAN);
@@ -881,6 +896,8 @@ void PauseGame()
 	mvwprintw(win, 14, 10, "╚══════╝");
 	wrefresh(win);
 
+	//this is REALLY pissing me off!
+	// THIS PART works fine but the janky level data isn't???
 	// And wait
 	do
 	{
