@@ -1,14 +1,12 @@
-/****************************************************
- * Pacman For Console V1.2                           *
- * By: Rev. Dr. Mike Billars (doctormike@gmail.com)  * <-- Maybe I should look into this guy
- * Date: 2006-12-12                                  *
- *                                                   *
- * Please see file COPYING for details on licensing  *
- *       and redistribution of this program          *
- *                                                   *
- ****************************************************/
+/*
 
-/* I'm waiting for the new Unicode version to come out. */
+Pacman For Console 2.0
+By: Alex Helton (alex@opossum-systems.net)
+Date: 2024-09-15
+
+LOOK ON MY WORKS, YE MIGHTY, AND DESPAIR!!
+
+*/
 
 // TODO:
 /* Update maze graphics to use pipe characters
@@ -17,9 +15,9 @@
  * Check if I'm digging my own grave
  */
 
-// TO PREVENT FURTHER OBVIOUS FRUSTRATION:
-// Use the makefile.
-// kinda gross but yeah
+// TO REDUCE PREVENTABLE FRUSTRATION:
+// Use the makefile. Do NOT try to gcc it outright!
+
 #define _XOPEN_SOURCE_EXTENDED
 #include <stdlib.h>
 
@@ -35,9 +33,9 @@
 #include <sys/resource.h>
 #include <time.h>
 
-#define EXIT_MSG "Good bye!"
-#define END_MSG "Game Over"
-#define QUIT_MSG "Bye"
+#define EXIT_MSG "Thanks for playing!"
+#define END_MSG "Game over..."
+#define QUIT_MSG "Bye!"
 #define LEVEL_ERR "Cannot find level file: "
 
 void IntroScreen();								  // Show introduction screen and menu
@@ -60,6 +58,7 @@ WINDOW *win;
 WINDOW *status;
 
 // For colors
+// I should *probably* give this enum a name
 enum
 {
 	Wall = 1,
@@ -76,8 +75,8 @@ enum
 };
 
 // I know global variables are bad, but it's just sooo easy!
-int Loc[5][2] = {0};			// Location of Ghosts and Pacman
-int Dir[5][2] = {0};			// Direction of Ghosts and Pacman
+int Location[5][2] = {0};		// Location of Ghosts and Pacman
+int Direction[5][2] = {0};		// Direction of Ghosts and Pacman
 int StartingPoints[5][2] = {0}; // Default location in case Pacman/Ghosts die
 int Invincible = 0;				// Check for invincibility
 int Food = 0;					// Number of pellets left in level
@@ -101,15 +100,22 @@ int milsleep(long milliseconds)
 	return nanosleep(&req, &rem);
 }
 
+int char_to_index(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';  // Map '0'-'9' to 0-9
+    }
+    if (c >= 'A' && c <= 'G') {
+        return c - 'A' + 10;  // Map 'A'-'G' to 10-16
+    }
+    return -1;  // Invalid character
+}
+
 int main(int argc, char *argv[])
 {
 	setlocale(LC_ALL, "");
-	; // I was told to do this
-
-	// Call nanosleep with the predefined timespec
+	// I was told to do this
 
 	int j = 0;
-	// srand( (unsigned)time( NULL ) );
 
 	InitCurses();
 	CheckScreenSize();
@@ -155,21 +161,21 @@ void CheckCollision()
 	for (a = 0; a < 4; a++)
 	{
 		// Collision
-		if ((Loc[a][0] == Loc[4][0]) && (Loc[a][1] == Loc[4][1]))
+		if ((Location[a][0] == Location[4][0]) && (Location[a][1] == Location[4][1]))
 		{
 
 			// Ghost dies
 			if (Invincible == 1)
 			{
 				Points = Points + GhostsInARow * 20;
-				mvwprintw(win, Loc[4][0], Loc[4][1] - 1, "%d", (GhostsInARow * 20));
+				mvwprintw(win, Location[4][0], Location[4][1] - 1, "%d", (GhostsInARow * 20));
 				GhostsInARow *= 2;
 				wrefresh(win);
 
 				milsleep(500); // Five. Hundred. Milliseconds.
 
-				Loc[a][0] = StartingPoints[a][0];
-				Loc[a][1] = StartingPoints[a][1];
+				Location[a][0] = StartingPoints[a][0];
+				Location[a][1] = StartingPoints[a][1];
 			}
 
 			// Pacman dies
@@ -177,39 +183,40 @@ void CheckCollision()
 			{
 				wattron(win, COLOR_PAIR(Pacman));
 
-				mvwprintw(win, Loc[4][0], Loc[4][1], "X"); // he's fucking dead
+				mvwprintw(win, Location[4][0], Location[4][1], "X"); // he's fucking dead
 
 				wrefresh(win);
 				milsleep(2500);
 				Lives--;
 
-				if (Lives == -1) {
+				if (Lives == -1)
+				{
 					wattron(win, COLOR_PAIR(Ghost1));
 					mvwprintw(win, 12, 10, "╔═════════╗");
 					mvwprintw(win, 13, 10, "║GAME OVER║");
 					mvwprintw(win, 14, 10, "╚═════════╝");
 					wrefresh(win);
-					//next time, let's make sure this is in its own bracket pair please...
-				milsleep(1000);
-				ExitProgram(END_MSG);
+					// next time, let's make sure this is in its own bracket pair please...
+					milsleep(1000);
+					ExitProgram(END_MSG);
 				}
-					
+
 				// Reset level
 				for (a = 0; a < 5; a++)
 				{
-					Loc[a][0] = StartingPoints[a][0];
-					Loc[a][1] = StartingPoints[a][1];
+					Location[a][0] = StartingPoints[a][0];
+					Location[a][1] = StartingPoints[a][1];
 				}
-				Dir[0][0] = 1;
-				Dir[0][1] = 0;
-				Dir[1][0] = -1;
-				Dir[1][1] = 0;
-				Dir[2][0] = 0;
-				Dir[2][1] = -1;
-				Dir[3][0] = 0;
-				Dir[3][1] = 1;
-				Dir[4][0] = 0;
-				Dir[4][1] = -1;
+				Direction[0][0] = 1;
+				Direction[0][1] = 0;
+				Direction[1][0] = -1;
+				Direction[1][1] = 0;
+				Direction[2][0] = 0;
+				Direction[2][1] = -1;
+				Direction[3][0] = 0;
+				Direction[3][1] = 1;
+				Direction[4][0] = 0;
+				Direction[4][1] = -1;
 
 				DrawWindow();
 
@@ -240,6 +247,8 @@ void CreateWindows(int y, int x, int y0, int x0)
 	status = newwin(3, 27, 29, 1);
 }
 
+
+
 void Delay()
 {
 	struct timespec t_start, t_current;
@@ -260,78 +269,75 @@ void Delay()
 	} while (abs(elapsed_ms) < SpeedOfGame);
 }
 
-void DrawWindow()
-{
-	int draw_Y = 0;
-	int draw_X = 0;
-	wchar_t chr; // changing to wchar_t allows for f r e a k y unicode support
-	int attr;
+void DrawWindow() {
+    typedef struct {
+        wchar_t chr;
+        int attr;
+        int color_pair;
+    } CaseData;
 
-	// mvwprintw?? may be the right option?
+    int draw_Y = 0;
+    int draw_X = 0;
+    char value;
 
-	// Display level array
-	for (draw_Y = 0; draw_Y < 29; draw_Y++)
-		for (draw_X = 0; draw_X < 28; draw_X++)
-		{
-			switch (Level[draw_Y][draw_X])
-			{
-				// consult the level data files, the numbers correspond to the cases in the loop here
-				/*
-				0 = "empty space"
-				1 = "wall"
-				2 = pellet
-				3 = power-up
-				4 = "ghost wall"
+	int index = char_to_index(value);  // Ensure char_to_index() is defined
 
-				The "ghost wall" is where ghosts can come in and out of
-				but not pacman
-				*/
+    CaseData gfx_array[] = {
+        {L' ', A_NORMAL, Normal},    // Case 0
+        {L' ', A_NORMAL, Wall},      // Case 1
+        {L'·', A_NORMAL, Pellet},    // Case 2
+        {L'*', A_BOLD, PowerUp},     // Case 3
+        {L' ', A_NORMAL, GhostWall}, // Case 4
+        {L'╔', A_NORMAL, Wall},      // Case 5
+        {L'═', A_NORMAL, Wall},      // Case 6
+        {L'║', A_NORMAL, Wall},      // Case 7
+        {L'╗', A_NORMAL, Wall},      // Case 8
+        {L'╗', A_NORMAL, Wall},      // Case 9
+        {L'╚', A_NORMAL, Wall},      // Case 10 (A)
+        {L'╝', A_NORMAL, Wall},      // Case 11 (B)
+        {L'╠', A_NORMAL, Wall},      // Case 12 (C)
+        {L'╣', A_NORMAL, Wall},      // Case 13 (D)
+        {L'╦', A_NORMAL, Wall},      // Case 14 (E)
+        {L'╩', A_NORMAL, Wall},      // Case 15 (F)
+        {L'╬', A_NORMAL, Wall}       // Case 16 (G)
+    };
 
-				// I'm *really* afraid to touch this
 
-			case 0:
-				chr = ' ';
-				attr = A_NORMAL;
-				wattron(win, COLOR_PAIR(Normal));
-				break;
-			case 1:
-				chr = ' ';
-				attr = A_NORMAL;
-				wattron(win, COLOR_PAIR(Wall));
-				break;
-			case 2:
-				chr = L'\u00b7';
-				attr = A_NORMAL;
-				wattron(win, COLOR_PAIR(Pellet));
-				break;
-			case 3:
-				chr = L'*';
-				attr = A_BOLD;
-				wattron(win, COLOR_PAIR(PowerUp));
-				break;
-			case 4:
-				chr = L' ';
-				attr = A_NORMAL;
-				wattron(win, COLOR_PAIR(GhostWall));
-				break;
-			}
-			// add a single-byte character and rendition to a window and advance the cursor
-			// and do that a whole buncha times
-			//mvwaddch(win, draw_Y, draw_X, chr); // kinda important, not advisable to remove
+    // Loop through the grid
+    for (draw_Y = 0; draw_Y < 29; draw_Y++) {
+        for (draw_X = 0; draw_X < 28; draw_X++) {
+            // Map the value to an index in case_array
+            
+            if (index >= 0 && index < sizeof(gfx_array) / sizeof(gfx_array[0])) {
+                // Apply the color and attribute for this character
+                wattron(win, COLOR_PAIR(gfx_array[index].color_pair));
+                wattron(win, gfx_array[index].attr);
 
-			// okay that was REALLY ANNOYING
-			// %lc --> some bullshit about wide characters
-			mvwprintw(win, draw_Y, draw_X, "%lc", chr);
+                // Print the character
+                mvwprintw(win, draw_Y, draw_X, "%lc", gfx_array[index].chr | gfx_array[index].attr);
 
-		}
-	// -DDATAROOTDIR=\"$(datarootdir)\" $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
+                // Turn off the color and attribute
+                wattroff(win, gfx_array[index].attr);
+                wattroff(win, COLOR_PAIR(gfx_array[index].color_pair));
+            }
+        }
+    }
+
+
+	// %lc --> some bullshit about wide characters
+
+
 	int stillAlive;
+
 	// Display number of lives, score, and level
-	attr = A_NORMAL;
+	//CaseData.attr = A_NORMAL;
 	wmove(status, 1, 1);
+
 	wattron(status, COLOR_PAIR(Pacman));
+	
 	for (stillAlive = 0; stillAlive < Lives; stillAlive++)
 		wprintw(status, "C ");
+
 	wprintw(status, "  ");
 	wattron(status, COLOR_PAIR(Normal));
 	mvwprintw(status, 2, 2, "Level: %d     Score: %d ", LevelNumber, Points);
@@ -341,28 +347,28 @@ void DrawWindow()
 	if (Invincible == 0)
 	{
 		wattron(win, COLOR_PAIR(Ghost1));
-		mvwaddch(win, Loc[0][0], Loc[0][1], '&');
+		mvwaddch(win, Location[0][0], Location[0][1], '&');
 		wattron(win, COLOR_PAIR(Ghost2));
-		mvwaddch(win, Loc[1][0], Loc[1][1], '&');
+		mvwaddch(win, Location[1][0], Location[1][1], '&');
 		wattron(win, COLOR_PAIR(Ghost3));
-		mvwaddch(win, Loc[2][0], Loc[2][1], '&');
+		mvwaddch(win, Location[2][0], Location[2][1], '&');
 		wattron(win, COLOR_PAIR(Ghost4));
-		mvwaddch(win, Loc[3][0], Loc[3][1], '&');
+		mvwaddch(win, Location[3][0], Location[3][1], '&');
 	}
 
 	// OR display vulnerable ghosts
 	else
 	{
 		wattron(win, COLOR_PAIR(BlueGhost));
-		mvwaddch(win, Loc[0][0], Loc[0][1], tleft + '0');
-		mvwaddch(win, Loc[1][0], Loc[1][1], tleft + '0');
-		mvwaddch(win, Loc[2][0], Loc[2][1], tleft + '0');
-		mvwaddch(win, Loc[3][0], Loc[3][1], tleft + '0');
+		mvwaddch(win, Location[0][0], Location[0][1], tleft + '0');
+		mvwaddch(win, Location[1][0], Location[1][1], tleft + '0');
+		mvwaddch(win, Location[2][0], Location[2][1], tleft + '0');
+		mvwaddch(win, Location[3][0], Location[3][1], tleft + '0');
 	}
 
 	// Display Pacman
 	wattron(win, COLOR_PAIR(Pacman));
-	mvwaddch(win, Loc[4][0], Loc[4][1], 'C');
+	mvwaddch(win, Location[4][0], Location[4][1], 'C');
 
 	wrefresh(win);
 }
@@ -391,40 +397,40 @@ void GetInput()
 	case KEY_UP:
 	case 'w':
 	case 'W':
-		if ((Level[(Loc[4][0] - 1) % 29][Loc[4][1]] != 1) && (Level[(Loc[4][0] - 1) % 29][Loc[4][1]] != 4))
+		if ((Level[(Location[4][0] - 1) % 29][Location[4][1]] != 1) && (Level[(Location[4][0] - 1) % 29][Location[4][1]] != 4))
 		{
-			Dir[4][0] = -1;
-			Dir[4][1] = 0;
+			Direction[4][0] = -1;
+			Direction[4][1] = 0;
 		}
 		break;
 
 	case KEY_DOWN:
 	case 's':
 	case 'S':
-		if ((Level[(Loc[4][0] + 1) % 29][Loc[4][1]] != 1) && (Level[(Loc[4][0] + 1) % 29][Loc[4][1]] != 4))
+		if ((Level[(Location[4][0] + 1) % 29][Location[4][1]] != 1) && (Level[(Location[4][0] + 1) % 29][Location[4][1]] != 4))
 		{
-			Dir[4][0] = 1;
-			Dir[4][1] = 0;
+			Direction[4][0] = 1;
+			Direction[4][1] = 0;
 		}
 		break;
 
 	case KEY_LEFT:
 	case 'a':
 	case 'A':
-		if ((Level[Loc[4][0]][(Loc[4][1] - 1) % 28] != 1) && (Level[Loc[4][0]][(Loc[4][1] - 1) % 28] != 4))
+		if ((Level[Location[4][0]][(Location[4][1] - 1) % 28] != 1) && (Level[Location[4][0]][(Location[4][1] - 1) % 28] != 4))
 		{
-			Dir[4][0] = 0;
-			Dir[4][1] = -1;
+			Direction[4][0] = 0;
+			Direction[4][1] = -1;
 		}
 		break;
 
 	case KEY_RIGHT:
 	case 'd':
 	case 'D':
-		if ((Level[Loc[4][0]][(Loc[4][1] + 1) % 28] != 1) && (Level[Loc[4][0]][(Loc[4][1] + 1) % 28] != 4))
+		if ((Level[Location[4][0]][(Location[4][1] + 1) % 28] != 1) && (Level[Location[4][0]][(Location[4][1] + 1) % 28] != 4))
 		{
-			Dir[4][0] = 0;
-			Dir[4][1] = 1;
+			Direction[4][0] = 0;
+			Direction[4][1] = 1;
 		}
 		break;
 
@@ -562,16 +568,16 @@ void LoadLevel(char *levelfile)
 	Food = 0;
 
 	// Reset defaults
-	Dir[0][0] = 1;
-	Dir[0][1] = 0;
-	Dir[1][0] = -1;
-	Dir[1][1] = 0;
-	Dir[2][0] = 0;
-	Dir[2][1] = -1;
-	Dir[3][0] = 0;
-	Dir[3][1] = 1;
-	Dir[4][0] = 0;
-	Dir[4][1] = -1;
+	Direction[0][0] = 1;
+	Direction[0][1] = 0;
+	Direction[1][0] = -1;
+	Direction[1][1] = 0;
+	Direction[2][0] = 0;
+	Direction[2][1] = -1;
+	Direction[3][0] = 0;
+	Direction[3][1] = 1;
+	Direction[4][0] = 0;
+	Direction[4][1] = -1;
 
 	// Open file
 	fin = fopen(levelfile, "r");
@@ -597,32 +603,32 @@ void LoadLevel(char *levelfile)
 
 			if (Level[a][b] == 5)
 			{
-				Loc[0][0] = a;
-				Loc[0][1] = b;
+				Location[0][0] = a;
+				Location[0][1] = b;
 				Level[a][b] = 0;
 			}
 			if (Level[a][b] == 6)
 			{
-				Loc[1][0] = a;
-				Loc[1][1] = b;
+				Location[1][0] = a;
+				Location[1][1] = b;
 				Level[a][b] = 0;
 			}
 			if (Level[a][b] == 7)
 			{
-				Loc[2][0] = a;
-				Loc[2][1] = b;
+				Location[2][0] = a;
+				Location[2][1] = b;
 				Level[a][b] = 0;
 			}
 			if (Level[a][b] == 8)
 			{
-				Loc[3][0] = a;
-				Loc[3][1] = b;
+				Location[3][0] = a;
+				Location[3][1] = b;
 				Level[a][b] = 0;
 			}
 			if (Level[a][b] == 9)
 			{
-				Loc[4][0] = a;
-				Loc[4][1] = b;
+				Location[4][0] = a;
+				Location[4][1] = b;
 				Level[a][b] = 0;
 			}
 		}
@@ -632,7 +638,7 @@ void LoadLevel(char *levelfile)
 
 	// Save initial character points for if Pacman or Ghosts die
 	for (a = 0; a < 5; a++)
-		StartingPoints[a][0] = Loc[a][0], StartingPoints[a][1] = Loc[a][1];
+		StartingPoints[a][0] = Location[a][0], StartingPoints[a][1] = Location[a][1];
 }
 
 void MainLoop()
@@ -690,27 +696,27 @@ void MoveGhosts()
 		{
 
 			// Switch sides?
-			if ((Loc[a][0] == 0) && (Dir[a][0] == -1))
-				Loc[a][0] = 28;
-			else if ((Loc[a][0] == 28) && (Dir[a][0] == 1))
-				Loc[a][0] = 0;
-			else if ((Loc[a][1] == 0) && (Dir[a][1] == -1))
-				Loc[a][1] = 27;
-			else if ((Loc[a][1] == 27) && (Dir[a][1] == 1))
-				Loc[a][1] = 0;
+			if ((Location[a][0] == 0) && (Direction[a][0] == -1))
+				Location[a][0] = 28;
+			else if ((Location[a][0] == 28) && (Direction[a][0] == 1))
+				Location[a][0] = 0;
+			else if ((Location[a][1] == 0) && (Direction[a][1] == -1))
+				Location[a][1] = 27;
+			else if ((Location[a][1] == 27) && (Direction[a][1] == 1))
+				Location[a][1] = 0;
 			else
 			{
 
 				// Determine which directions we can go
 				for (b = 0; b < 4; b++)
 					checksides[b] = 0;
-				if (Level[Loc[a][0] + 1][Loc[a][1]] != 1)
+				if (Level[Location[a][0] + 1][Location[a][1]] != 1)
 					checksides[0] = 1;
-				if (Level[Loc[a][0] - 1][Loc[a][1]] != 1)
+				if (Level[Location[a][0] - 1][Location[a][1]] != 1)
 					checksides[1] = 1;
-				if (Level[Loc[a][0]][Loc[a][1] + 1] != 1)
+				if (Level[Location[a][0]][Location[a][1] + 1] != 1)
 					checksides[2] = 1;
-				if (Level[Loc[a][0]][Loc[a][1] - 1] != 1)
+				if (Level[Location[a][0]][Location[a][1] - 1] != 1)
 					checksides[3] = 1;
 
 				// Don't do 180 unless we have to
@@ -721,13 +727,13 @@ void MoveGhosts()
 
 				if (c > 1)
 				{
-					if (Dir[a][0] == 1)
+					if (Direction[a][0] == 1)
 						checksides[1] = 0;
-					else if (Dir[a][0] == -1)
+					else if (Direction[a][0] == -1)
 						checksides[0] = 0;
-					else if (Dir[a][1] == 1)
+					else if (Direction[a][1] == 1)
 						checksides[3] = 0;
-					else if (Dir[a][1] == -1)
+					else if (Direction[a][1] == -1)
 						checksides[2] = 0;
 				}
 
@@ -741,23 +747,23 @@ void MoveGhosts()
 					{
 						if (b == 0)
 						{
-							Dir[a][0] = 1;
-							Dir[a][1] = 0;
+							Direction[a][0] = 1;
+							Direction[a][1] = 0;
 						}
 						else if (b == 1)
 						{
-							Dir[a][0] = -1;
-							Dir[a][1] = 0;
+							Direction[a][0] = -1;
+							Direction[a][1] = 0;
 						}
 						else if (b == 2)
 						{
-							Dir[a][0] = 0;
-							Dir[a][1] = 1;
+							Direction[a][0] = 0;
+							Direction[a][1] = 1;
 						}
 						else if (b == 3)
 						{
-							Dir[a][0] = 0;
-							Dir[a][1] = -1;
+							Direction[a][0] = 0;
+							Direction[a][1] = -1;
 						}
 					}
 					else
@@ -765,28 +771,28 @@ void MoveGhosts()
 						if (Invincible == 0)
 						{
 							// Chase Pacman
-							if ((Loc[4][0] > Loc[a][0]) && (checksides[0] == 1))
+							if ((Location[4][0] > Location[a][0]) && (checksides[0] == 1))
 							{
-								Dir[a][0] = 1;
-								Dir[a][1] = 0;
+								Direction[a][0] = 1;
+								Direction[a][1] = 0;
 								c = 1;
 							}
-							else if ((Loc[4][0] < Loc[a][0]) && (checksides[1] == 1))
+							else if ((Location[4][0] < Location[a][0]) && (checksides[1] == 1))
 							{
-								Dir[a][0] = -1;
-								Dir[a][1] = 0;
+								Direction[a][0] = -1;
+								Direction[a][1] = 0;
 								c = 1;
 							}
-							else if ((Loc[4][1] > Loc[a][1]) && (checksides[2] == 1))
+							else if ((Location[4][1] > Location[a][1]) && (checksides[2] == 1))
 							{
-								Dir[a][0] = 0;
-								Dir[a][1] = 1;
+								Direction[a][0] = 0;
+								Direction[a][1] = 1;
 								c = 1;
 							}
-							else if ((Loc[4][1] < Loc[a][1]) && (checksides[3] == 1))
+							else if ((Location[4][1] < Location[a][1]) && (checksides[3] == 1))
 							{
-								Dir[a][0] = 0;
-								Dir[a][1] = -1;
+								Direction[a][0] = 0;
+								Direction[a][1] = -1;
 								c = 1;
 							}
 						}
@@ -794,28 +800,28 @@ void MoveGhosts()
 						else
 						{
 							// Run away from Pacman
-							if ((Loc[4][0] > Loc[a][0]) && (checksides[1] == 1))
+							if ((Location[4][0] > Location[a][0]) && (checksides[1] == 1))
 							{
-								Dir[a][0] = -1;
-								Dir[a][1] = 0;
+								Direction[a][0] = -1;
+								Direction[a][1] = 0;
 								c = 1;
 							}
-							else if ((Loc[4][0] < Loc[a][0]) && (checksides[0] == 1))
+							else if ((Location[4][0] < Location[a][0]) && (checksides[0] == 1))
 							{
-								Dir[a][0] = 1;
-								Dir[a][1] = 0;
+								Direction[a][0] = 1;
+								Direction[a][1] = 0;
 								c = 1;
 							}
-							else if ((Loc[4][1] > Loc[a][1]) && (checksides[3] == 1))
+							else if ((Location[4][1] > Location[a][1]) && (checksides[3] == 1))
 							{
-								Dir[a][0] = 0;
-								Dir[a][1] = -1;
+								Direction[a][0] = 0;
+								Direction[a][1] = -1;
 								c = 1;
 							}
-							else if ((Loc[4][1] < Loc[a][1]) && (checksides[2] == 1))
+							else if ((Location[4][1] < Location[a][1]) && (checksides[2] == 1))
 							{
-								Dir[a][0] = 0;
-								Dir[a][1] = 1;
+								Direction[a][0] = 0;
+								Direction[a][1] = 1;
 								c = 1;
 							}
 						}
@@ -824,8 +830,8 @@ void MoveGhosts()
 				} while ((checksides[b] == 0) && (c == 0));
 
 				// Move Ghost
-				Loc[a][0] += Dir[a][0];
-				Loc[a][1] += Dir[a][1];
+				Location[a][0] += Direction[a][0];
+				Location[a][1] += Direction[a][1];
 			}
 		}
 }
@@ -836,40 +842,40 @@ void MovePacman()
 	static int itime = 0;
 
 	// Switch sides?
-	if ((Loc[4][0] == 0) && (Dir[4][0] == -1))
-		Loc[4][0] = 28;
-	else if ((Loc[4][0] == 28) && (Dir[4][0] == 1))
-		Loc[4][0] = 0;
-	else if ((Loc[4][1] == 0) && (Dir[4][1] == -1))
-		Loc[4][1] = 27;
-	else if ((Loc[4][1] == 27) && (Dir[4][1] == 1))
-		Loc[4][1] = 0;
+	if ((Location[4][0] == 0) && (Direction[4][0] == -1))
+		Location[4][0] = 28;
+	else if ((Location[4][0] == 28) && (Direction[4][0] == 1))
+		Location[4][0] = 0;
+	else if ((Location[4][1] == 0) && (Direction[4][1] == -1))
+		Location[4][1] = 27;
+	else if ((Location[4][1] == 27) && (Direction[4][1] == 1))
+		Location[4][1] = 0;
 
 	// Or
 	else
 	{
 		// Move Pacman
-		Loc[4][0] += Dir[4][0];
-		Loc[4][1] += Dir[4][1];
+		Location[4][0] += Direction[4][0];
+		Location[4][1] += Direction[4][1];
 
 		// If he hit a wall, move back
-		if ((Level[Loc[4][0]][Loc[4][1]] == 1) || (Level[Loc[4][0]][Loc[4][1]] == 4))
+		if ((Level[Location[4][0]][Location[4][1]] == 1) || (Level[Location[4][0]][Location[4][1]] == 4))
 		{
-			Loc[4][0] -= Dir[4][0];
-			Loc[4][1] -= Dir[4][1];
+			Location[4][0] -= Direction[4][0];
+			Location[4][1] -= Direction[4][1];
 		}
 	}
 
 	// What is he eating?
-	switch (Level[Loc[4][0]][Loc[4][1]])
+	switch (Level[Location[4][0]][Location[4][1]])
 	{
 	case 2: // Pellet
-		Level[Loc[4][0]][Loc[4][1]] = 0;
+		Level[Location[4][0]][Location[4][1]] = 0;
 		Points++;
 		Food--;
 		break;
 	case 3: // PowerUp
-		Level[Loc[4][0]][Loc[4][1]] = 0;
+		Level[Location[4][0]][Location[4][1]] = 0;
 		Invincible = 1;
 		if (GhostsInARow == 0)
 			GhostsInARow = 1;
@@ -901,8 +907,6 @@ void PauseGame()
 	mvwprintw(win, 14, 10, "╚══════╝");
 	wrefresh(win);
 
-	//this is REALLY pissing me off!
-	// THIS PART works fine but the janky level data isn't???
 	// And wait
 	do
 	{
