@@ -316,6 +316,9 @@ void DrawWindow()
 			// add a single-byte character and rendition to a window and advance the cursor
 			// and do that a whole buncha times
 			//mvwaddch(win, draw_Y, draw_X, chr); // kinda important, not advisable to remove
+
+			// okay that was REALLY ANNOYING
+			// %lc --> some bullshit about wide characters
 			mvwprintw(win, draw_Y, draw_X, "%lc", chr);
 
 		}
