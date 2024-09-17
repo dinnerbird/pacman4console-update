@@ -269,75 +269,76 @@ void Delay()
 	} while (abs(elapsed_ms) < SpeedOfGame);
 }
 
-void DrawWindow() {
-    typedef struct {
-        wchar_t chr;
-        int attr;
-        int color_pair;
-    } CaseData;
-
-    int draw_Y = 0;
-    int draw_X = 0;
-    char value;
-
-	int index = char_to_index(value);  // Ensure char_to_index() is defined
-
-    CaseData gfx_array[] = {
-        {L' ', A_NORMAL, Normal},    // Case 0
-        {L' ', A_NORMAL, Wall},      // Case 1
-        {L'·', A_NORMAL, Pellet},    // Case 2
-        {L'*', A_BOLD, PowerUp},     // Case 3
-        {L' ', A_NORMAL, GhostWall}, // Case 4
-        {L'╔', A_NORMAL, Wall},      // Case 5
-        {L'═', A_NORMAL, Wall},      // Case 6
-        {L'║', A_NORMAL, Wall},      // Case 7
-        {L'╗', A_NORMAL, Wall},      // Case 8
-        {L'╗', A_NORMAL, Wall},      // Case 9
-        {L'╚', A_NORMAL, Wall},      // Case 10 (A)
-        {L'╝', A_NORMAL, Wall},      // Case 11 (B)
-        {L'╠', A_NORMAL, Wall},      // Case 12 (C)
-        {L'╣', A_NORMAL, Wall},      // Case 13 (D)
-        {L'╦', A_NORMAL, Wall},      // Case 14 (E)
-        {L'╩', A_NORMAL, Wall},      // Case 15 (F)
-        {L'╬', A_NORMAL, Wall}       // Case 16 (G)
-    };
 
 
-    // Loop through the grid
-    for (draw_Y = 0; draw_Y < 29; draw_Y++) {
-        for (draw_X = 0; draw_X < 28; draw_X++) {
-            // Map the value to an index in case_array
-            
-            if (index >= 0 && index < sizeof(gfx_array) / sizeof(gfx_array[0])) {
-                // Apply the color and attribute for this character
-                wattron(win, COLOR_PAIR(gfx_array[index].color_pair));
-                wattron(win, gfx_array[index].attr);
-
-                // Print the character
-                mvwprintw(win, draw_Y, draw_X, "%lc", gfx_array[index].chr | gfx_array[index].attr);
-
-                // Turn off the color and attribute
-                wattroff(win, gfx_array[index].attr);
-                wattroff(win, COLOR_PAIR(gfx_array[index].color_pair));
-            }
-        }
-    }
 
 
-	// %lc --> some bullshit about wide characters
+void DrawWindow()
+{
+	int draw_Y = 0;
+	int draw_X = 0;
+	wchar_t chr; // changing to wchar_t allows for f r e a k y unicode support
+	int attr;
 
+	// Display level array
+	for (draw_Y = 0; draw_Y < 29; draw_Y++)
+		for (draw_X = 0; draw_X < 28; draw_X++)
+		{
+			switch (Level[draw_Y][draw_X])
+			{
+				// consult the level data files, the numbers correspond to the cases in the loop here
+				/*
+				0 = "empty space"
+				1 = "wall"
+				2 = pellet
+				3 = power-up
+				4 = "ghost wall"
+
+				The "ghost wall" is where ghosts can come in and out of
+				but not pacman
+				*/
+
+				// I'm *really* afraid to touch this
+
+			case 0:
+				chr = L'\u2591';
+				attr = A_NORMAL;
+				wattron(win, COLOR_PAIR(Normal));
+				break;
+			case 1:
+				chr = L' ';
+				attr = A_NORMAL;
+				wattron(win, COLOR_PAIR(Wall));
+				break;
+			case 2:
+				chr = '.';
+				attr = A_NORMAL;
+				wattron(win, COLOR_PAIR(Pellet));
+				break;
+			case 3:
+				chr = L'*';
+				attr = A_BOLD;
+				wattron(win, COLOR_PAIR(PowerUp));
+				break;
+			case 4:
+				chr = L' ';
+				attr = A_NORMAL;
+				wattron(win, COLOR_PAIR(GhostWall));
+				break;
+			}
+			// add a single-byte character and rendition to a window and advance the cursor
+			// and do that a whole buncha times
+			//mvwaddch(win, draw_Y, draw_X, chr | attr); // kinda important, not advisable to remove
+			mvwprintw(win, draw_Y, draw_X, "%c", chr);
+		}
 
 	int stillAlive;
-
 	// Display number of lives, score, and level
-	//CaseData.attr = A_NORMAL;
+	attr = A_NORMAL;
 	wmove(status, 1, 1);
-
 	wattron(status, COLOR_PAIR(Pacman));
-	
 	for (stillAlive = 0; stillAlive < Lives; stillAlive++)
 		wprintw(status, "C ");
-
 	wprintw(status, "  ");
 	wattron(status, COLOR_PAIR(Normal));
 	mvwprintw(status, 2, 2, "Level: %d     Score: %d ", LevelNumber, Points);
@@ -372,6 +373,7 @@ void DrawWindow() {
 
 	wrefresh(win);
 }
+
 
 void ExitProgram(const char *message)
 {
@@ -652,7 +654,7 @@ void MainLoop()
 	do
 	{
 		MovePacman();
-		DrawWindow();
+		//DrawWindow();
 		CheckCollision();
 		MoveGhosts();
 		DrawWindow();
@@ -668,6 +670,7 @@ void MainLoop()
 
 	DrawWindow();
 	nanosleep(&honkShoo, NULL);
+	
 }
 
 void MoveGhosts()
