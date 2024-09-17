@@ -183,15 +183,17 @@ void CheckCollision()
 				milsleep(2500);
 				Lives--;
 
-				if (Lives == -1)
+				if (Lives == -1) {
 					wattron(win, COLOR_PAIR(Ghost1));
 					mvwprintw(win, 12, 10, "╔═════════╗");
 					mvwprintw(win, 13, 10, "║GAME OVER║");
 					mvwprintw(win, 14, 10, "╚═════════╝");
 					wrefresh(win);
-					
+					//next time, let's make sure this is in its own bracket pair please...
 				milsleep(1000);
 				ExitProgram(END_MSG);
+				}
+					
 				// Reset level
 				for (a = 0; a < 5; a++)
 				{
